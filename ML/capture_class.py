@@ -5,7 +5,7 @@ from argparse import ArgumentParser
 import cv2
 from mediapipe.python.solutions.hands import Hands
 
-from utils.hand import extract_hand_roi
+from preprocessing import extract_hand_roi
 
 
 def parse_arguments():

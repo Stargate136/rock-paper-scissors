@@ -3,8 +3,7 @@ import json
 import cv2
 import mediapipe as mp
 
-from utils.hand import calculate_bounding_box, adjust_aspect_ratio
-from utils.fingers import detect_finger_positions, distance_to_base
+from utils import calculate_bounding_box, adjust_aspect_ratio, detect_finger_positions, distance_to_base
 
 
 hands = mp.solutions.hands.Hands(max_num_hands=1)

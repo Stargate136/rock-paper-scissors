@@ -1,0 +1,12 @@
+{
+    "images": {
+        "width": 300,
+        "height": 300,
+        "margin": 100
+    },
+    "features": {
+        "_comment": "TODO : remplacer par le lien GitHub Gist du dataset",
+        "url": "data/features.csv",
+        "version": "0.0.0"
+    }
+}
