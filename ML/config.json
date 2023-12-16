@@ -4,9 +4,10 @@
         "height": 300,
         "margin": 100
     },
-    "features": {
-        "_comment": "TODO : remplacer par le lien GitHub Gist du dataset",
-        "url": "data/features.csv",
-        "version": "0.0.0"
-    }
+    "datasets": [
+        {
+            "url": "https://gist.githubusercontent.com/Stargate136/6f061885ae7068bb8f648d2e7ce90a3e/raw/6351de6dda7ec05e1160ad35e428c426bc672956/rock-paper-sissors-v0.csv",
+            "version": "0"
+        }
+    ]
 }

@@ -7,8 +7,8 @@ from sklearn.svm import SVC
 
 def train_model():
     with open("config.json", "r") as f:
-        features_url = json.load(f)["features"]["url"]
-    df = pd.read_csv(features_url)
+        dataset_url = json.load(f)["datasets"][-1]["url"]
+    df = pd.read_csv(dataset_url)
 
     X = df.drop(["target"], axis=1).values
     y = df["target"].values
