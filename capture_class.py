@@ -1,11 +1,14 @@
+from pathlib import Path
+from argparse import ArgumentParser
+
 import cv2
-import mediapipe as mp
-import os
-import argparse
+from mediapipe.python.solutions.hands import Hands
+
+from ..utils.hand import extract_hand_roi
 
 
 def parse_arguments():
-    parser = argparse.ArgumentParser(description="Capture images for a specific class.")
+    parser = ArgumentParser(description="Capture images for a specific class.")
     parser.add_argument("class_folder", help="Name of the folder to save captured images.")
     parser.add_argument("--desired_width", type=int, default=300, help="Desired width of the captured images.")
     parser.add_argument("--desired_height", type=int, default=300, help="Desired height of the captured images.")
@@ -13,54 +16,8 @@ def parse_arguments():
     return parser.parse_args()
 
 
-def initialize_hand_tracking():
-    mp_hands = mp.solutions.hands
-    hands = mp_hands.Hands(static_image_mode=False, max_num_hands=2,
-                           min_detection_confidence=0.5, min_tracking_confidence=0.5)
-    return hands
-
-
-def calculate_bounding_box(hand_landmarks, frame_shape, margin):
-    x_coords = [lm.x * frame_shape[1] for lm in hand_landmarks.landmark]
-    y_coords = [lm.y * frame_shape[0] for lm in hand_landmarks.landmark]
-    x_start, y_start = min(x_coords), min(y_coords)
-    x_end, y_end = max(x_coords), max(y_coords)
-
-    width = int(x_end - x_start)
-    height = int(y_end - y_start)
-
-    return (
-        max(0, int(x_start - margin)),
-        max(0, int(y_start - margin)),
-        min(frame_shape[1], int(x_end + margin)),
-        min(frame_shape[0], int(y_end + margin)),
-        width,
-        height
-    )
-
-
-def adjust_aspect_ratio(x_start, y_start, x_end, y_end, frame_shape, desired_width, desired_height, desired_ratio):
-    current_ratio = (x_end - x_start) / (y_end - y_start)
-
-    if current_ratio > desired_ratio:
-        new_width = int((y_end - y_start) * desired_ratio)
-        x_start += (x_end - x_start - new_width) // 2
-        x_end = x_start + new_width
-    else:
-        new_height = int((x_end - x_start) / desired_ratio)
-        y_start += (y_end - y_start - new_height) // 2
-        y_end = y_start + new_height
-
-    return (
-        max(0, int(x_start)),
-        max(0, int(y_start)),
-        min(frame_shape[1], int(x_end)),
-        min(frame_shape[0], int(y_end))
-    )
-
-
 def capture_images(cap, hands, class_folder, desired_width, desired_height, margin):
-    os.makedirs(class_folder, exist_ok=True)
+    class_folder.mkdir(parents=True, exist_ok=True)
     counter = 0
 
     while True:
@@ -70,12 +27,8 @@ def capture_images(cap, hands, class_folder, desired_width, desired_height, marg
 
         if results.multi_hand_landmarks:
             for hand_landmarks in results.multi_hand_landmarks:
-                x_start, y_start, x_end, y_end, width, height = calculate_bounding_box(
-                    hand_landmarks, frame.shape, margin
-                )
-
-                x_start, y_start, x_end, y_end = adjust_aspect_ratio(
-                    x_start, y_start, x_end, y_end, frame.shape, desired_width, desired_height, desired_width / desired_height
+                (x_start, y_start), (x_end, y_end) = extract_hand_roi(
+                    hand_landmarks, frame, desired_width, desired_height, margin
                 )
 
                 hand_roi = frame[y_start:y_end, x_start:x_end]
@@ -85,8 +38,8 @@ def capture_images(cap, hands, class_folder, desired_width, desired_height, marg
                     key = cv2.waitKey(1)
 
                     if key == ord('c'):
-                        image_path = os.path.join(class_folder, f'{class_folder}_{counter}.png')
-                        cv2.imwrite(image_path, resized_hand)
+                        image_path = class_folder / f'{class_folder}_{counter}.png'
+                        cv2.imwrite(str(image_path), resized_hand)
                         print(f"Recorded image : {image_path}")
                         counter += 1
 
@@ -114,9 +67,10 @@ def main():
     print("Press 'q' to quit")
 
     cap = cv2.VideoCapture(0)
-    hands = initialize_hand_tracking()
-
-    capture_images(cap, hands, args.class_folder, args.desired_width, args.desired_height, args.margin)
+    hands = Hands(static_image_mode=False, max_num_hands=2,
+                  min_detection_confidence=0.5, min_tracking_confidence=0.5)
+    class_folder = Path(args.class_folder)
+    capture_images(cap, hands, class_folder, args.desired_width, args.desired_height, args.margin)
 
 
 if __name__ == "__main__":
