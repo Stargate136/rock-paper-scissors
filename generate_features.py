@@ -5,7 +5,7 @@ import cv2
 import pandas as pd
 from tqdm import tqdm
 
-import preprocessing
+
 from preprocessing import get_features
 
 

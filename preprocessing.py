@@ -3,8 +3,9 @@ import json
 import cv2
 import mediapipe as mp
 
-from utils.fingers import detect_finger_positions, distance_to_base
 from utils.hand import calculate_bounding_box, adjust_aspect_ratio
+from utils.fingers import detect_finger_positions, distance_to_base
+
 
 hands = mp.solutions.hands.Hands(max_num_hands=1)
 
@@ -18,8 +19,7 @@ def extract_hand_roi(frame, desired_width, desired_height, margin):
         hand_landmarks = results.multi_hand_landmarks[0]
     if hand_landmarks is not None:
         bounding_box = calculate_bounding_box(hand_landmarks, frame.shape, margin)
-        # if bounding_box is None:
-        #     return (None, None), (None, None)
+
         x_start, y_start, x_end, y_end, width, height = bounding_box
 
         x_start, y_start, x_end, y_end = adjust_aspect_ratio(

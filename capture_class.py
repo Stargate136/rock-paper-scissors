@@ -17,6 +17,7 @@ def parse_arguments():
     margin = config_images["margin"]
 
     parser = ArgumentParser(description="Capture images for a specific class and resize them.")
+
     parser.add_argument("class_folder", help="Name of the folder to save captured images.")
     parser.add_argument(
         "--desired_width",
@@ -89,7 +90,9 @@ def main():
     print("Press 'q' to quit")
 
     cap = cv2.VideoCapture(0)
+
     hands = Hands(max_num_hands=1)
+
     class_folder = Path(args.class_folder)
     capture_images(cap, hands, class_folder, args.desired_width, args.desired_height, args.margin)
 
