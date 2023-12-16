@@ -1,9 +1,37 @@
 import json
 
 import cv2
+import mediapipe as mp
 
 from utils.fingers import detect_finger_positions, distance_to_base
-from utils.hand import get_hand_roi, extract_hand_roi
+from utils.hand import calculate_bounding_box, adjust_aspect_ratio
+
+hands = mp.solutions.hands.Hands(max_num_hands=1)
+
+
+def extract_hand_roi(frame, desired_width, desired_height, margin):
+    image_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    results = hands.process(image_rgb)
+
+    hand_landmarks = None
+    if results.multi_hand_landmarks:
+        hand_landmarks = results.multi_hand_landmarks[0]
+    if hand_landmarks is not None:
+        bounding_box = calculate_bounding_box(hand_landmarks, frame.shape, margin)
+        # if bounding_box is None:
+        #     return (None, None), (None, None)
+        x_start, y_start, x_end, y_end, width, height = bounding_box
+
+        x_start, y_start, x_end, y_end = adjust_aspect_ratio(
+            x_start, y_start, x_end, y_end, frame.shape, desired_width / desired_height
+        )
+        return (x_start, y_start), (x_end, y_end)
+
+
+def get_hand_roi(frame, start_position, end_position):
+    x_start, y_start = start_position
+    x_end, y_end = end_position
+    return frame[y_start:y_end, x_start:x_end]
 
 
 def get_features(image):

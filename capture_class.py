@@ -1,18 +1,40 @@
+import json
 from pathlib import Path
 from argparse import ArgumentParser
 
 import cv2
 from mediapipe.python.solutions.hands import Hands
 
-from ..utils.hand import extract_hand_roi
+from utils.hand import extract_hand_roi
 
 
 def parse_arguments():
-    parser = ArgumentParser(description="Capture images for a specific class.")
+    with open("config.json", "r") as f:
+        config_images = json.load(f)["images"]
+
+    width = config_images["width"]
+    height = config_images["height"]
+    margin = config_images["margin"]
+
+    parser = ArgumentParser(description="Capture images for a specific class and resize them.")
     parser.add_argument("class_folder", help="Name of the folder to save captured images.")
-    parser.add_argument("--desired_width", type=int, default=300, help="Desired width of the captured images.")
-    parser.add_argument("--desired_height", type=int, default=300, help="Desired height of the captured images.")
-    parser.add_argument("--margin", type=int, default=100, help="Margin around the region of interest.")
+    parser.add_argument(
+        "--desired_width",
+        type=int,
+        default=width,
+        help=f"Desired width of the captured images. (Default: {width})."
+    )
+    parser.add_argument(
+        "--desired_height",
+        type=int,
+        default=height,
+        help=f"Desired height of the captured images. (Default: {height})."
+    )
+    parser.add_argument(
+        "--margin",
+        type=int,
+        default=margin,
+        help=f"Margin around the region of interest. (Default: {margin}).")
     return parser.parse_args()
 
 
@@ -67,8 +89,7 @@ def main():
     print("Press 'q' to quit")
 
     cap = cv2.VideoCapture(0)
-    hands = Hands(static_image_mode=False, max_num_hands=2,
-                  min_detection_confidence=0.5, min_tracking_confidence=0.5)
+    hands = Hands(max_num_hands=1)
     class_folder = Path(args.class_folder)
     capture_images(cap, hands, class_folder, args.desired_width, args.desired_height, args.margin)
 
