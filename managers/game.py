@@ -1,60 +1,7 @@
 import asyncio
 import uuid
-from datetime import datetime, timedelta
 
-import numpy as np
-
-from ML.preprocessing import pipeline
-from ML.train import train_model
-
-
-class TimeManager:
-    """
-    TimeManager class
-    """
-
-    @staticmethod
-    def now():
-        """Returns the current time"""
-        return datetime.utcnow()
-
-    @staticmethod
-    def timestamp_after_delay(delay_seconds):
-        """
-        Returns the timestamp after a delay
-        :param delay_seconds: number of seconds
-        :return: timestamp"""
-        current_time = datetime.utcnow()
-        delayed_time = current_time + timedelta(seconds=delay_seconds)
-        return delayed_time
-
-
-class ClassifierManager:
-    def __init__(self):
-        self._model = train_model()
-
-    @property
-    def model(self):
-        raise AttributeError("You can't access the model directly")
-
-    @model.setter
-    def model(self, value):
-        raise AttributeError("You can't set the model directly")
-
-    @model.deleter
-    def model(self):
-        raise AttributeError("You can't delete the model directly")
-
-    @staticmethod
-    def __preprocess(image):
-        return pipeline(image)
-
-    def predict(self, image):
-        features = self.__preprocess(image)
-        if not np.isnan(features).any():
-            prediction = self._model.predict([features])[0]
-            if prediction != "neutral":
-                return prediction
+from .classifier import ClassifierManager
 
 
 class Game:
@@ -163,14 +110,6 @@ class GameManager:
 
     # ==== Private methods ====
 
-    @staticmethod
-    def __generate_game_id():
-        """
-        Generate a unique game id
-        :return: (str) unique game id
-        """
-        return str(uuid.uuid4())
-
     def __get_game_id_by_player(self, player):
         """
         Get the game id of a player
@@ -250,7 +189,7 @@ class GameManager:
         """
         try:
             if player1 in self._waiting_players and player2 in self._waiting_players:
-                game_id = self.__generate_game_id()
+                game_id = str(uuid.uuid4())
                 game = Game(player1, player2)
                 self._games[game_id] = game
                 self._waiting_players.remove(player1)
