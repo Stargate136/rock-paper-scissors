@@ -3,8 +3,7 @@ import json
 import cv2
 import mediapipe as mp
 
-from utils import calculate_bounding_box, adjust_aspect_ratio, detect_finger_positions, distance_to_base
-
+from .utils import calculate_bounding_box, adjust_aspect_ratio, detect_finger_positions, distance_to_base, get_config
 
 hands = mp.solutions.hands.Hands(max_num_hands=1)
 
@@ -39,8 +38,7 @@ def get_features(image):
 
 
 def pipeline(image, return_hand_roi_position=False):
-    with open("config.json", "r") as f:
-        config_images = json.load(f)["images"]
+    config_images = get_config()["images"]
 
     width = config_images["width"]
     height = config_images["height"]

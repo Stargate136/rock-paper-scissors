@@ -5,12 +5,12 @@ from argparse import ArgumentParser
 import cv2
 from mediapipe.python.solutions.hands import Hands
 
-from preprocessing import extract_hand_roi
+from .utils import get_config
+from .preprocessing import extract_hand_roi
 
 
 def parse_arguments():
-    with open("config.json", "r") as f:
-        config_images = json.load(f)["images"]
+    config_images = get_config()["images"]
 
     width = config_images["width"]
     height = config_images["height"]

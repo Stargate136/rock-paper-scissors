@@ -1,13 +1,12 @@
-import json
-
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.svm import SVC
 
+from .utils import get_config
+
 
 def train_model():
-    with open("config.json", "r") as f:
-        dataset_url = json.load(f)["datasets"][-1]["url"]
+    dataset_url = get_config()["datasets"][-1]["url"]
     df = pd.read_csv(dataset_url)
 
     X = df.drop(["target"], axis=1).values

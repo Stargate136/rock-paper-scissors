@@ -1,3 +1,6 @@
+import json
+from pathlib import Path
+
 import cv2
 import mediapipe as mp
 import numpy as np
@@ -88,3 +91,9 @@ def adjust_aspect_ratio(x_start, y_start, x_end, y_end, frame_shape, desired_rat
         min(frame_shape[1], int(x_end)),
         min(frame_shape[0], int(y_end))
     )
+
+
+def get_config():
+    with open(Path(__file__).parent / "config.json", "r") as f:
+        config = json.load(f)
+    return config
