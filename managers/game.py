@@ -102,6 +102,9 @@ class GameManager:
     """
     GameManager class
     """
+
+    DELAY_TO_CAPTURE_IMAGE_IN_SEC = 3
+
     def __init__(self):
         self._clf = ClassifierManager()
         self._waiting_players = []
