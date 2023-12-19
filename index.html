@@ -7,8 +7,182 @@
 <body>
 <div id="home">
     <h1>Welcome</h1>
-    <button>Play !</button>
+    <button id="start-game-button">Start Game</button>
 </div>
+
+<div id="game" style="display: none;">
+    <h1>Rock Paper Scissors Game</h1>
+    <div id="game-container">
+        <div id="game-infos-wrapper"></div>
+        <div id="game-board"></div>
+    </div>
+</div>
+
+<script>
+    
+    const socket = new WebSocket('ws://localhost:8000/ws');  // TODO : Ajuster l'URL du serveur WebSocket
+
+    const home = document.getElementById('home')
+    const game = document.getElementById('game')
+    const gameInfosWrapper = document.getElementById('game-infos-wrapper')
+    const gameBoard = document.getElementById('game-board')
+
+    var actualTimestamp = null;
+    var gameId = null;
+
+
+    function startGame(gameData) {
+        console.log("Game data:", gameData)
+        gameId = gameData.id;
+        gameInfosWrapper.innerHTML = `
+            <h2>Game ID: ${gameId}</h2>
+            <h3>Player 1: ${gameData.player1.name} - Score: ${gameData.player1.score} / ${gameData.max_score}</h3>
+            <h3>Player 2: ${gameData.player2.name} - Score: ${gameData.player2.score} / ${gameData.max_score}</h3>
+        `
+
+        const webcam = document.createElement('video')
+        webcam.autoplay = true
+        webcam.id = 'webcam'
+
+        gameBoard.appendChild(webcam)
+
+        navigator.mediaDevices.getUserMedia({video: true})
+            .then(function (stream) {
+                webcam.srcObject = stream;
+            })
+            .catch(function (error) {
+                console.error('Erreur lors de l\'accès à la webcam: ', error);
+            });
+
+        const countdownWrapper = document.createElement('div');
+        gameBoard.appendChild(countdownWrapper);
+
+        const captureWebcamButton = document.createElement('button');
+        captureWebcamButton.innerHTML = 'Lancer le compte a rebours';
+        const countdownElement = document.createElement('p');
+        countdownElement.id = 'countdown';
+        countdownWrapper.appendChild(countdownElement);
+        countdownWrapper.appendChild(captureWebcamButton);
+
+        captureWebcamButton.addEventListener('click', () => {
+            socket.send(JSON.stringify({'action': 'on_click_start_countdown'}))
+        })
+    }
+
+    function startCountdown(timeToCaptureImage) {
+        
+        socket.send(JSON.stringify({action: 'get_timestamp_to_capture_image'}));
+        const intervalId = setInterval(() => {
+
+            socket.send(JSON.stringify({action: 'get_actual_timestamp'}));
+            const remainingTime = timeToCaptureImage - actualTimestamp;
+
+            console.log("actualTimestamp", actualTimestamp)
+            console.log("timeToCaptureImage", timeToCaptureImage)
+            console.log("remainingTime", remainingTime)
+            const countdownElement = document.getElementById('countdown');
+            countdownElement.innerHTML = "Il reste <strong>" + remainingTime / 1000 + "</strong> secondes";  // Affiche le temps restant en secondes
+
+            if (actualTimestamp && timeToCaptureImage && remainingTime <= 0) {
+                clearInterval(intervalId);
+                console.log(`Captured image at ${actualTimestamp}`);
+                sendImage();
+                // TODO : Ajoutez ici la logique pour effectuer l'action après la fin du compte à rebours
+                // Par exemple, appeler une fonction comme captureWebcam
+            }
+        }, 750); 
+    }
+
+    function sendImage() {
+        const capturedImageCanvas = document.createElement('canvas');
+        const context = capturedImageCanvas.getContext('2d');
+        const webcam = document.getElementById('webcam');
+
+        // Attendez que la vidéo soit prête
+        if (webcam.readyState === webcam.HAVE_ENOUGH_DATA) {
+            // Mettez à jour la taille du canevas avec la taille actuelle de la vidéo
+            capturedImageCanvas.width = webcam.videoWidth;
+            capturedImageCanvas.height = webcam.videoHeight;
+
+            // Dessinez le cadre actuel de la vidéo sur le canevas
+            context.drawImage(webcam, 0, 0, webcam.videoWidth, webcam.videoHeight);
+
+            // Obtenez les données de l'image depuis le canevas
+            const imageData = capturedImageCanvas.toDataURL('image/png');
+            console.log('Captured image data:', imageData);
+
+            // Envoyez les données de l'image au serveur
+            socket.send(JSON.stringify({'action': 'capture_webcam', 'image_data': imageData}));
+        } else {
+            console.error('La vidéo n\'a pas encore chargé suffisamment de données. Attendez que la vidéo soit prête.');
+        }
+    }
+
+
+    function addStartGameButtonListener() {
+        const startGameButton = document.getElementById('start-game-button');
+        startGameButton.addEventListener('click', (event) => {
+            home.style.display = 'none';
+            game.style.display = 'block';
+            gameInfosWrapper.innerHTML = '<p>Waiting for players...</p>';
+            socket.send(JSON.stringify({'action': 'start_game'}));
+        });
+    }
+
+    function addSocketEventListeners() {
+
+        socket.addEventListener('open', (event) => {
+            console.log('WebSocket connection opened:', event);
+        })
+
+        socket.addEventListener('close', (event) => {
+            console.log('WebSocket connection closed:', event);
+        })
+
+        socket.addEventListener('message', (event) => {
+            const data = JSON.parse(event.data)
+            const action = data.action
+
+            console.log(data)
+            /*
+            if (action === 'connect' || action === 'disconnect') {
+                const player_id = data.player_id
+                console.log('Player ID:', player_id)
+            } */
+
+            if (action === 'start_game') {
+                console.log('Start game')
+                startGame(data.game_data)
+            } else if (action === 'start_countdown') {
+                startCountdown(new Date(data.end_timestamp))
+            } else if (action === 'wait_for_other_player') {
+                const countdownElement = document.getElementById('countdown');
+                countdownElement.innerText = "En attente de l'autre joueur ...";
+            } else if (action === 'wait_to_click') {
+                const countdownElement = document.getElementById('countdown');
+                countdownElement.innerText = "L'autre joueur vous attend ...";
+            }
+            
+            else if (action === 'get_actual_timestamp') {
+                actualTimestamp = new Date(data.timestamp)
+            }
+        })
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        addSocketEventListeners()
+        addStartGameButtonListener()
+    })
+
+</script>
+
+
+<script>
+
+
+
+
+</script> 
 
 
 </body>
