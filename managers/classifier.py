@@ -9,7 +9,8 @@ class ClassifierManager:
 
     def predict(self, image):
         X = preprocess_image(image)
-        if not np.isnan(X).any():
-            prediction = self._model.predict([X])[0]
-            if prediction != "neutral":
-                return prediction
+        if X is not None:
+            X = np.asarray(X)
+            if not np.isnan(X).any():
+                prediction = self._model.predict([X])
+                return prediction[0]

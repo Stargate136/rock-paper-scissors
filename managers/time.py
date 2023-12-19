@@ -9,7 +9,7 @@ class TimeManager:
     @staticmethod
     def now():
         """Returns the current time"""
-        return datetime.utcnow()
+        return str(datetime.utcnow())
 
     @staticmethod
     def timestamp_after_delay(delay_seconds):
@@ -19,4 +19,4 @@ class TimeManager:
         :return: timestamp"""
         current_time = datetime.utcnow()
         delayed_time = current_time + timedelta(seconds=delay_seconds)
-        return delayed_time
+        return str(delayed_time)

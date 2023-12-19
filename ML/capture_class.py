@@ -1,4 +1,3 @@
-import json
 from pathlib import Path
 from argparse import ArgumentParser
 
@@ -45,28 +44,24 @@ def capture_images(cap, hands, class_folder, desired_width, desired_height, marg
 
     while True:
         ret, frame = cap.read()
-        img_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        results = hands.process(img_rgb)
 
-        if results.multi_hand_landmarks:
-            for hand_landmarks in results.multi_hand_landmarks:
-                (x_start, y_start), (x_end, y_end) = extract_hand_roi(
-                    hand_landmarks, frame, desired_width, desired_height, margin
-                )
+        (x_start, y_start), (x_end, y_end) = extract_hand_roi(
+            frame, desired_width, desired_height, margin
+        )
 
-                hand_roi = frame[y_start:y_end, x_start:x_end]
+        hand_roi = frame[y_start:y_end, x_start:x_end]
 
-                if hand_roi.shape[0] > 0 and hand_roi.shape[1] > 0:
-                    resized_hand = cv2.resize(hand_roi, (desired_width, desired_height))
-                    key = cv2.waitKey(1)
+        if hand_roi.shape[0] > 0 and hand_roi.shape[1] > 0:
+            resized_hand = cv2.resize(hand_roi, (desired_width, desired_height))
+            key = cv2.waitKey(1)
 
-                    if key == ord('c'):
-                        image_path = class_folder / f'{class_folder}_{counter}.png'
-                        cv2.imwrite(str(image_path), resized_hand)
-                        print(f"Recorded image : {image_path}")
-                        counter += 1
+            if key == ord('c'):
+                image_path = class_folder / f'{class_folder}_{counter}.png'
+                cv2.imwrite(str(image_path), resized_hand)
+                print(f"Recorded image : {image_path}")
+                counter += 1
 
-                cv2.rectangle(frame, (x_start, y_start), (x_end, y_end), (0, 255, 0), 2)
+        cv2.rectangle(frame, (x_start, y_start), (x_end, y_end), (0, 255, 0), 2)
 
         cv2.imshow('Capture Images', frame)
 

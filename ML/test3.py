@@ -17,9 +17,9 @@ def main():
         if features is not None:
             X, (start_pos, end_pos) = features
             if not np.isnan(X).any():
-                pred = clf.predict([X])
+                prediction = clf.predict([X])
 
-                cv2.putText(frame, str(pred), (10, 30), cv2.FONT_HERSHEY_PLAIN, 2, (0, 0, 0), 2)
+                cv2.putText(frame, str(prediction), (10, 30), cv2.FONT_HERSHEY_PLAIN, 2, (0, 0, 0), 2)
 
             cv2.rectangle(frame, start_pos, end_pos, (0, 255, 0), 2)
 
